@@ -122,25 +122,65 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:#899289}
 </form>
 <div id="thanks" class="note" style="display:none;color:#b9d59d;font-size:16px">Дякуємо! Зараз відкриється Telegram із підготовленим текстом замовлення.</div>
 <div class="note">Після натискання кнопки відкриється Telegram. Перевірте дані замовлення та надішліть повідомлення продавцю в Telegram: <b>@ayron2373</b>.</div>
+
 <script>
-function sendOrder(e){
+async function sendOrder(e) {
   e.preventDefault();
-  const name=document.getElementById('name').value.trim();
-  const phone=document.getElementById('phone').value.trim();
-  const size=document.getElementById('size').value;
-  const color=document.querySelector('input[name="color"]:checked').value;
-  const text=`Добрий день! Хочу замовити костюм Soft Shell.
-Ім’я: ${name}
-Телефон: ${phone}
-Розмір: ${size}
-Колір: ${color}
-Ціна: 2100 грн`;
-  document.getElementById('thanks').style.display='block';
-  // Telegram username is not provided, so the phone number is shown for manual contact.
-  navigator.clipboard?.writeText(text);
-  window.open('https://t.me/ayron2373','_blank');
+
+  const button = document.querySelector(
+    '#orderForm button[type="submit"]'
+  );
+  const thanks = document.getElementById('thanks');
+
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const size = document.getElementById('size').value;
+  const color = document.querySelector(
+    'input[name="color"]:checked'
+  ).value;
+
+  button.disabled = true;
+  button.textContent = 'Надсилаємо замовлення...';
+
+  try {
+    const response = await fetch(
+      'https://ayron-shop-telegram.onrender.com/order',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: name,
+          phone: phone,
+          size: size,
+          color: color
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+      throw new Error('Не вдалося надіслати замовлення');
+    }
+
+    thanks.textContent =
+      'Дякуємо! Ваше замовлення прийнято. Ми зв’яжемося з вами найближчим часом.';
+    thanks.style.display = 'block';
+
+    button.textContent = 'Замовлення надіслано!';
+  } catch (error) {
+    alert(
+      'Не вдалося надіслати замовлення. Спробуйте ще раз трохи пізніше.'
+    );
+
+    button.disabled = false;
+    button.textContent = 'Замовити через Telegram';
+  }
 }
 </script>
+
 </div>
 </div>
 </section>
